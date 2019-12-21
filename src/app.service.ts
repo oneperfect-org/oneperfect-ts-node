@@ -3,6 +3,10 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class AppService {
   getHello(): string {
+    return 'Hello World!';
+  }
+
+  getIndex(): string {
     return `
       <!doctype html>
       <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono&display=swap" rel="stylesheet">
