@@ -40,10 +40,13 @@ export class AppService {
         }
 
         body > div > button {
+          box-sizing: border-box;
           position: absolute;
           bottom: 2em;
           right: 2em;
-          padding: 0.25em 0.5em;
+          width: 3em;
+          padding: 0.5em 0;
+          text-align: center;
           border: 0.25em solid #808080;
           border-radius: 100%;
         }
@@ -53,7 +56,7 @@ export class AppService {
           bottom: 2em;
           left: 2em;
           padding: 0.25em 0.5em;
-          font-size: 50%;
+          font-size: 60%;
         }
 
         body *:focus {
@@ -61,9 +64,9 @@ export class AppService {
           outline: none;
         }
 
-        body, textarea, button, input, select {
+        body, textarea, button, input, select, pre, code {
           line-height: 1.5;
-          font-size: 20px;
+          font-size: 18px;
           font-family: 'IBM Plex Mono', Consolas, 'Andale Mono WT', 'Andale Mono', 'Lucida Console', 'Lucida Sans Typewriter', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Liberation Mono', 'Nimbus Mono L', Monaco, 'Courier New', Courier, monospace;
           color: #404040;
         }
@@ -85,8 +88,8 @@ export class AppService {
             e.preventDefault();
             var selStart = el.selectionStart;
             var selEnd = el.selectionEnd;
-            var start = el.value.indexOf("\\n", selStart)
-            var end = el.value.indexOf("\\n", selStart  )
+            var start = el.value.lastIndexOf("\\n", selStart) + 1
+            var end = el.value.indexOf("\\n", selStart)
             var pos = 0
             if (end === -1) {
               end = el.value.length
@@ -113,19 +116,37 @@ export class AppService {
             el.selectionEnd = selEnd + pos;
           }
         }
+        function doRun(query) {
+          fetch('/query', {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            method: 'post',
+            body: JSON.stringify({ query: query })
+          }).then(response => response.text()).then(appendOutput)
+        }
+        function appendOutput(data) {
+          var el = document.createElement('pre')
+          el.innerText = data
+          document.getElementById("output").appendChild(el)
+        }
       </script>
       <body>
         <div>
-          <textarea autofocus id="input" placeholder="Input program" onkeydown="handleTab(event)"></textarea>
-          <button onclick="console.log('go')">Go</button>
-          <span>indent { tab } dedent { ⇧tab } clear { ⌘ K } go { ⌘ return }</span>
+          <textarea autofocus placeholder="Input program" onkeydown="handleTab(event)"></textarea>
+          <button onclick="doRun(event.target.previousElementSibling.value)">Run</button>
+          <span>indent { tab } dedent { ⇧tab } clear { ⌘ K } go { ⌘ return }</span>
         </div>
         <div>
-          <div tabindex="0">
+          <div tabindex="0" id="output">
             Output
           </div>
         </div>
       </body>
     `;
+  }
+
+  postQuery(query: string) {
+    return 'I am not implemented';
   }
 }
