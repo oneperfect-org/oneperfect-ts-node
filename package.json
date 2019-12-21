@@ -14,6 +14,7 @@
     "compile:dev": "tsc -p . --watch",
     "start:debug": "nest start --debug --watch",
     "lint": "tslint -p tsconfig.json -c tslint.json",
+    "postinstall": "npm run build",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",

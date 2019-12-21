@@ -20,6 +20,7 @@ export class AppService {
 
         body > div:first-of-type {
           left: 0;
+          z-index: 1;
         }
 
         body > div:last-of-type {
@@ -44,19 +45,20 @@ export class AppService {
         body > div > button {
           box-sizing: border-box;
           position: absolute;
-          bottom: 2em;
-          right: 2em;
+          bottom: 3em;
+          right: -1.5em;
           width: 3em;
           padding: 0.5em 0;
           text-align: center;
           border: 0.25em solid #808080;
           border-radius: 100%;
+          z-index: 1;
         }
 
         body > div > span {
           position: absolute;
-          bottom: 2em;
-          left: 2em;
+          bottom: 1em;
+          left: 1em;
           padding: 0.25em 0.5em;
           font-size: 60%;
         }
