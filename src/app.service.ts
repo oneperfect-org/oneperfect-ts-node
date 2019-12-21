@@ -32,11 +32,13 @@ export class AppService {
           top: 0;
           left: 0;
           right: 0;
-          bottom: 0;
+          bottom: 2em;
           width: 100%;
           border: 0.25em solid #808080;
           padding: 0.5em;
           resize: none;
+          overflow-x: hidden;
+          overflow-y: auto;
         }
 
         body > div > button {
