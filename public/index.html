@@ -1,0 +1,355 @@
+<!doctype html>
+
+<head>
+  <meta charset="utf-8">
+  <title>1perfect console</title>
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.png" />
+  <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono:400,600&display=swap" rel="stylesheet">
+  <style>
+    body>div {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 50%;
+    }
+
+    body>div:first-of-type {
+      left: 0;
+      z-index: 1;
+    }
+
+    body>div:last-of-type {
+      right: 0;
+    }
+
+    body>div>div,
+    body>div>textarea {
+      box-sizing: border-box;
+      position: absolute;
+      left: 0;
+      right: 0;
+      width: 100%;
+      border: 0.25rem solid #a0a0a0;
+      resize: none;
+      overflow-x: hidden;
+      overflow-y: auto;
+      top: 0;
+      bottom: 0;
+    }
+
+    body>div>textarea {
+      padding: 2rem 0.5rem;
+    }
+
+    body>div>button {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 3rem;
+      border: none;
+      background: #a0a0a0;
+      color: #fff;
+      box-sizing: border-box;
+      padding: 0.75em 1rem;
+      font-size: 60%;
+      font-weight: bold;
+    }
+
+    textarea:focus+button {
+      background-color: #4080ff
+    }
+
+    body>div>span {
+      position: absolute;
+      left: 0.25rem;
+      padding: 0.5rem 0.9rem;
+      font-size: 60%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+      width: calc(100% - 5rem);
+      z-index: 1;
+      background-color: rgba(255, 255, 255, 0.85);
+    }
+
+
+    body>div>span:first-of-type {
+      top: 0.25rem;
+    }
+
+    body>div>span:last-of-type {
+      bottom: 0.25rem;
+    }
+
+    body *:focus {
+      border-color: #4080ff;
+      outline: none;
+    }
+
+    body,
+    textarea,
+    button,
+    input,
+    select,
+    pre,
+    code {
+      line-height: 1.5;
+      font-size: 18px;
+      font-family: 'IBM Plex Mono', Consolas, 'Andale Mono WT', 'Andale Mono', 'Lucida Console', 'Lucida Sans Typewriter', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Liberation Mono', 'Nimbus Mono L', Monaco, 'Courier New', Courier, monospace;
+      color: inherit;
+    }
+
+    body {
+      color: #404040;
+    }
+
+    body>div>div>div {
+      position: relative;
+      padding: 0 3rem 0 1rem;
+    }
+
+    body>div>div>div:nth-last-child(2n + 1) {
+      background-color: #f0f0f0;
+    }
+
+    body>div>div>div.error:nth-last-child(2n + 1) {
+      background-color: #a22;
+    }
+
+    body>div>div>div>pre {
+      padding: 0.5rem;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    .info {
+      border-radius: 100%;
+      background: #a0a0a0;
+      color: #fff;
+      width: 1.5em;
+      text-align: center;
+      display: inline-block;
+      font-weight: bold;
+    }
+
+    .light {
+      border-radius: 100%;
+      background: #a0a0a0;
+      width: 12px;
+      height: 12px;
+      display: block;
+      position: absolute;
+      top: 12px;
+      left: -4px;
+      border: 0.25rem solid #fff;
+    }
+
+    .light.no {
+      background-color: #a00;
+    }
+
+    .light.on {
+      background-color: #0aa;
+    }
+
+    .light.pending {
+      background-color: #fc0;
+    }
+
+    .light:before {
+      content: '';
+      background-color: inherit;
+      position: absolute;
+      top: -4px;
+      left: -4px;
+      width: 12px;
+      height: 12px;
+      display: block;
+      border-top: 0.25rem solid #fff;
+      border-bottom: 0.25rem solid #fff;
+    }
+
+    .error {
+      background-color: #a44;
+      color: #fff;
+    }
+
+    .client-time,
+    .server-time {
+      position: absolute;
+      font-size: 60%;
+    }
+
+    .client-time {
+      right: 0.2rem;
+      top: 1.4rem;
+    }
+
+    .server-time {
+      right: 0.2rem;
+      top: 0.4rem;
+    }
+
+  </style>
+  <script>
+    var commands = {
+      doRun() {
+        console.log('Not ready')
+      }
+    }
+    function handleTab(e) {
+      var el = e.target;
+      if (e.keyCode == 75 || e.which == 75) {
+        if (e.metaKey) {
+          el.value = ''
+        }
+      }
+      else if (e.keyCode == 13 || e.which == 13) {
+        if (e.ctrlKey || e.metaKey) {
+          el.nextElementSibling.click()
+        }
+      }
+      else if (e.keyCode == 9 || e.which == 9) {
+        e.preventDefault();
+        var selStart = el.selectionStart;
+        var selEnd = el.selectionEnd;
+        var start = el.value.lastIndexOf("\n", selStart) + 1
+        var end = el.value.indexOf("\n", selStart)
+        var pos = 0
+        if (end === -1) {
+          end = el.value.length
+        }
+        var line = el.value.substring(start, end)
+        if (e.shiftKey) {
+          if (line[0] === ' ') {
+            if (line[1] === ' ') {
+              line = line.substring(2)
+              pos -= 2
+            }
+            else {
+              line = line.substring(1)
+              pos -= 1
+            }
+          }
+        }
+        else {
+          line = "  " + line
+          pos += 2
+        }
+        el.value = el.value.substring(0, start) + line + el.value.substring(end);
+        el.selectionStart = selStart + pos;
+        el.selectionEnd = selEnd + pos;
+      }
+    }
+    function saveInput() {
+      if (!input) {
+        return
+      }
+      localStorage.in = input.value
+      localStorage.s = input.selectionStart
+      localStorage.e = input.selectionEnd
+    }
+    function init() {
+      var input = document.getElementById("input")
+      input.value = localStorage.in || ''
+      input.setSelectionRange(
+        parseInt(localStorage.s || 0),
+        parseInt(localStorage.e || input.value.length)
+      )
+      input.removeAttribute('disabled')
+      var pending = document.getElementById('pending')
+      var pendingStatus = document.getElementById('pending-status')
+      var pendingLight = document.getElementById('pending-light')
+      var pendingNumber = document.getElementById('pending-number')
+      var pendingQueries = 0
+      commands.doRun = function (query) {
+        pendingQueries++
+        pendingLight.classList.add('pending')
+        pendingStatus.innerText = pendingQueries === 1 ? "pending query" : "pending queries"
+        pendingNumber.innerText = pendingQueries
+        var clientStart = Date.now()
+        fetch('/query', {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          method: 'post',
+          body: JSON.stringify({ query: query })
+        }).then(response => response.json())
+          .then(data => new Promise(resolve => setTimeout(() => resolve(data), 250)))
+          .then(data => prependOutput(data, clientStart))
+          .catch(() => prependOutput({ message: "System inaccessible" }, clientStart))
+      }
+      function prependOutput(data, clientStart) {
+        var contents = data.contents ? data.contents : data
+        var clientEnd = Date.now() - 250
+        var clientDuration = clientEnd - clientStart
+        var serverStart = 'start' in data ? data.start : null
+        var serverEnd = 'end' in data ? data.end : null
+        var serverDuration = serverStart !== null && serverEnd !== null ? serverEnd - serverStart : null
+        pendingQueries--
+        pendingNumber.innerText = pendingQueries
+        if (pendingQueries === 0) {
+          pendingLight.classList.remove('pending')
+          pendingStatus.innerText = "idle"
+        }
+        else {
+          pendingStatus.innerText = pendingQueries === 1 ? "pending query" : "pending queries"
+        }
+        var el = document.createElement('div')
+        var light = document.createElement('span')
+        var values = document.createElement('pre')
+        var clientTime = document.createElement('span')
+        clientTime.classList.add('client-time')
+        clientTime.innerText = `net ${clientDuration}ms`
+        el.append(clientTime)
+        if (serverDuration !== null) {
+          var serverTime = document.createElement('span')
+          serverTime.classList.add('server-time')
+          serverTime.innerText = `${serverDuration.toFixed(3)}ms`
+          el.append(serverTime)
+        }
+        light.classList.add('light')
+        el.appendChild(light)
+        el.appendChild(values)
+        pending.after(el)
+        if (contents.message) {
+          values.innerText = `${contents.statusCode ? `HTTP ${contents.statusCode} ` : ''}${contents.message}`
+          el.classList.add('error')
+          light.classList.add('no')
+        }
+        else {
+          values.innerText = contents.data
+          light.classList.add('on')
+        }
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <div>
+    <span><span class="info">i</span> quick start: now • help • {select} • [split] • (merge) • &lt;override&gt; • no /
+      on</span>
+    <textarea disabled id="input" autofocus placeholder="Input program" onkeydown="handleTab(event)"
+      onkeyup="saveInput()" onmouseup="saveInput()"></textarea>
+    <button onclick="commands.doRun(event.target.previousElementSibling.value)">Run</button>
+    <span><span class="info">i</span> keyboard: indent { tab } dedent { ⇧tab } clear { ⌘ K } run { ⌘ return } nav { ⌥⌘
+      arrows }</span>
+  </div>
+  <div>
+    <div tabindex="0" id="output">
+      <div id="pending">
+        <span class="light" id="pending-light"></span>
+        <pre><span class="info" id="pending-number">0</span> <span id="pending-status">idle</span></pre>
+      </div>
+      <div>
+        <span class="light on"></span>
+        <pre><span class="info">i</span> output: clear { ⌘ R }</pre>
+      </div>
+    </div>
+  </div>
+  <script>
+    init()
+  </script>
+</body>

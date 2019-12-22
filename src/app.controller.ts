@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Header } from '@nestjs/common';
 import { AppService } from './app.service';
 
 export class QueryDto {
@@ -12,11 +12,6 @@ export class AppController {
   @Get('/hello')
   getHello() {
     return this.appService.getHello();
-  }
-
-  @Get()
-  getIndex() {
-    return this.appService.getIndex();
   }
 
   @Post('/query')
