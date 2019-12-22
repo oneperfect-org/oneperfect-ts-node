@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { lex } from './util/lex';
-import { runNode } from './util/runNode';
+import { runNode, runProgram } from './util/runNode';
 import { context } from './util/context';
 import { generateId } from './util/generateId';
 import { highResTime } from './util/highResTime';
@@ -15,13 +15,14 @@ export class AppService {
     const start = highResTime();
     try {
       const rootContext = context(generateId(), null, {});
-      const contents = await runNode(rootContext, lex(query));
+      const contents = await runProgram(rootContext, lex(query));
       return {
         start,
         end: highResTime(),
         contents,
       };
     } catch (e) {
+      console.error(e);
       return {
         start,
         end: highResTime(),

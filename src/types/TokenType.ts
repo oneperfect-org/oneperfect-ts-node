@@ -1,0 +1,16 @@
+export enum TokenType {
+  block = 'block',
+  break = 'break',
+  code = 'code',
+  comment = 'comment',
+  crash = 'crash',
+  init = 'init',
+  no = 'no',
+  null = 'null',
+  number = 'number',
+  on = 'on',
+  seek = 'seek',
+  string = 'string',
+  up = 'up',
+  word = 'word',
+}

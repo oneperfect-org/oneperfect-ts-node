@@ -1,15 +1,35 @@
 import { generateId } from './generateId';
+import { helpContent } from '../content/helpContent';
+import { IResult } from '../types/IResult';
+import { readNumber } from './readNumber';
+import { TokenType } from '../types/TokenType';
 
 export interface IContextValues {
   [key: string]: any;
 }
 
 export interface IContext {
+  code?: boolean;
+  comment?: string;
   id: string;
+  key?: string;
   parent?: IContext;
+  value?: any;
   values: IContextValues;
-  select(name: string): Promise<void>;
-  withValues(values: IContextValues): IContext;
+  applyBreak(): IResult;
+  applyCode(value: any): IResult;
+  applyComment(comment: string): IResult;
+  applyKey(name: string): IResult;
+  applyKey(name: string): IResult;
+  applyKeyword(keyword: TokenType): IResult;
+  applyNumber(name: string): IResult;
+  applyValue(value: any): IResult;
+  branchPermanent(values: IContextValues): IContext;
+  branchTemporary(): IContext;
+  readThisKeyValueFromParent(): any;
+  readKeyValue(key: string): any;
+  selectValues(names: string[]): IContext;
+  _c_o_n_t_e_x_t_: true;
 }
 
 const globalValues = {
@@ -19,51 +39,35 @@ const globalValues = {
   },
   now: Date.now,
   help() {
-    return `
-    Welcome to the 1perfect language tutorial
-
-      • more information at https://1perfect.org/
-      • suggested file extension is *.1p
-
-    Syntax:
-      <context> .. enters context as new global
-      name<1> .... sets "name" to 1 in current context
-      { name } ... selects "name" from current context
-                   (all queries are automatically wrapped in { },
-                    so you don't need to add these at the top
-                    or you will create a double-nested query)
-      ( name ) ... TBD
-      [ name ] ... TBD
-
-    Language reserved keywords:
-      crash ...... immediately terminate execution
-      space ...... i.e. void / null / undefined / empty
-      on ......... i.e. boolean true
-      no ......... i.e. boolean false
-      seek ....... navigate to location
-      up ......... enters parent context as new global
-                   (will crash if already at root)
-
-    Default global values:
-      now ........ current unix time in ms, i.e. ${Date.now()}
-      parent ..... parent context, if not at root
-      process .... { id<...>, start<...> }
-
-    Language features:
-    `
-      .replace(/\n    /g, '\n')
-      .trim();
+    return helpContent;
   },
 };
 
-export const context = (id, parent: any, values: IContextValues): IContext => ({
+export const context = (
+  id: string,
+  parent: null | IContext,
+  values: IContextValues,
+): IContext => ({
+  _c_o_n_t_e_x_t_: true,
   id,
+  code: false,
+  key: null,
   parent,
+  value: null,
   values,
-  withValues(values: { [key: string]: any }) {
-    return context(generateId(), parent, values);
+  applyBreak() {
+    if (this.key !== null) {
+      this.value = this.readKeyValue(this.key);
+    }
   },
-  async select(name: string) {
+  applyCode(value) {
+    this.applyValue(value);
+    this.code = false;
+  },
+  applyComment(comment) {
+    this.comment = this.comment ? `${this.comment}\n${comment}` : comment;
+  },
+  applyKey(name) {
     if (name in globalValues) {
       if (typeof globalValues[name] === 'function') {
         this.values[name] = globalValues[name]();
@@ -71,7 +75,67 @@ export const context = (id, parent: any, values: IContextValues): IContext => ({
         this.values[name] = globalValues[name];
       }
     } else {
-      this.values[name] = null;
+      this.key = name;
+      this.value = null;
     }
+  },
+  applyKeyword(keyword) {
+    switch (keyword) {
+      case TokenType.code:
+        if (this.code) {
+          return { message: `Unexpected successive keyword: ${keyword}` };
+        }
+        this.code = true;
+        break;
+      default:
+        return { message: `Unexpected keyword: ${keyword}` };
+    }
+  },
+  applyNumber(value) {
+    this.applyValue(readNumber(value));
+  },
+  applyValue(value) {
+    console.log('applyValue', this.key, value);
+    if (this.key) {
+      this.values[this.key] = value;
+      this.key = null;
+    } else {
+      this.value = value;
+    }
+  },
+  branchPermanent(values) {
+    return context(generateId(), parent, values);
+  },
+  branchTemporary() {
+    return context('#', this, {});
+  },
+  readKeyValue(key) {
+    if (key.match(/-?\d+(\.\d*)?/)) {
+      throw new Error('Should replace with real number parsing');
+      return parseFloat(key);
+    }
+    if (!(key in this.values)) {
+      if (this.parent && key in this.parent.values) {
+        return this.parent.values[key];
+      }
+      return { message: `Cannot select undefined value: "${key}"` };
+    }
+    return this.values[key];
+  },
+  readThisKeyValueFromParent() {
+    if (this.value !== null) {
+      return this.value;
+    }
+    if (this.key === null) {
+      return null;
+    }
+    return this.parent.readKeyValue(this.key);
+  },
+  selectValues(names) {
+    const scope = {};
+    names.forEach(name => {
+      scope[name] = this.readKeyValue(name);
+    });
+    return this.branchPermanent(scope);
   },
 });

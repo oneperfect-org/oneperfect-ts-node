@@ -1,12 +1,12 @@
 export interface INode {
   parent?: INode;
-  _: INode[];
+  _?: INode[];
   name: string;
   value?: string;
 }
 
 export interface IGrammar {
-  [key: string]: { [key: string]: RegExp };
+  [key: string]: { [key: string]: RegExp | string };
 }
 
 /**
@@ -28,7 +28,7 @@ export const sparse = (
    * Setup
    */
   let pos = { line: 1, col: 1 };
-  let stack: INode = { _: [], name: token };
+  let stack: INode = { name: token };
   let node = stack;
   let lastMatch = '';
 
@@ -45,7 +45,7 @@ export const sparse = (
        * Handle regex matching
        */
       case 'object':
-        let matched = new RegExp('^' + match.source).exec(string);
+        let matched = new RegExp('^(' + match.source + ')').exec(string);
         return matched !== null ? matched[0] : false;
 
       /**
@@ -119,14 +119,19 @@ export const sparse = (
           }
 
           /**
-           * Handle @self
+           * Handle @self and literals
            */
-          if (test !== '@self') token = test;
+          if (test !== '@self' && test[0] !== '+') {
+            token = test;
+          }
 
           /**
            * Process token and continue
            */
-          node = processor(node, { _: [], name: token, value: match });
+          node = processor(node, {
+            name: test[0] === '+' ? test.substr(1) : token,
+            value: match,
+          });
           lastMatch = match;
           continue stringLoop;
         }
