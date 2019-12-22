@@ -18,7 +18,7 @@ export const encodeObject = (object: { [key: string]: any }) => {
       ? ` ${inner.join('')} `
       : ['']
           .concat(
-            inner.map(x => `  ${x}`),
+            inner.map(x => `  ${x.replace(/\n/g, '\n  ')}`),
             [''],
           )
           .join('\n');
